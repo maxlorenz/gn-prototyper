@@ -1,13 +1,4 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <html>
   <head>
     <meta charset="utf-8">
@@ -15,16 +6,107 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <title>gn-prototyper Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
     <link rel="import" href="../gn-prototyper.html">
+
+    <link rel="stylesheet" href="../css/leaflet.css" />
+    <script src="../js/leaflet.js"></script>
   </head>
   <body unresolved>
 
-
-    
+    <div id="map" style="height: 640px"></div>
 
     <script src="../js/routing-api.js"></script>
     <script>
-      cacheOSMData(53.5653, 10.0014, 0.003);
-      console.log(cache);
+        var map = L.map('map');
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+
+        }).addTo(map);
+
+        function findNodeWithShortestDistance(set) {
+            var distance = Infinity;
+            var shortestId = null;
+
+            for (var id in set) {
+                if (set[id].distance < distance) {
+                    distance = set[id].distance;
+                    shortestId = id;
+                }
+            }
+
+            return nodeCache[shortestId];
+        }
+
+        function UCS(start, goal) {
+            map.setView([(start.lat + goal.lat)/2, (start.lon + goal.lon)/2], 15);
+            L.marker([start.lat, start.lon]).addTo(map);
+            L.marker([goal.lat, goal.lon]).addTo(map);
+
+            var node;
+            var frontier = {};
+            var explored = {};
+            var maxSteps = 1000;
+
+            node = start;
+            node.distance = 0;
+            frontier[node.id] = node;
+
+            while (Object.keys(frontier).length > 0 && maxSteps > 0) {
+
+                node = findNodeWithShortestDistance(frontier);
+                delete frontier[node.id];
+
+                if (node == goal) { // Draw found path
+                    var latLng = [];
+
+                    while (node.previous != undefined) {
+                        latLng.push([node.lat, node.lon]);
+                        node = node.previous;
+                    }
+
+                    L.polyline(latLng, { color: 'red' }).addTo(map);
+                }
+
+                explored[node.id] = true;
+                L.circle([node.lat, node.lon], 2).addTo(map);
+
+                getNextNodes(node).forEach(function(n) {
+                    previous = node;
+                    distance = distanceInM(node, n);
+
+                    if (!(n.id in explored)) {
+                        if (!(n.id in frontier)) {
+                            frontier[n.id] = n;
+                            frontier[n.id].previous = previous;
+                            frontier[n.id].distance = distance;
+                        }
+                        else if (frontier[n.id].distance > distance) {
+                            frontier[n.id].previous = previous;
+                            frontier[n.id].distance = distance;
+                        }
+                    }
+                });
+
+                maxSteps--;
+            }
+        }
+
+        // AM1, Lübeck
+        var lat = 53.8338072;
+        var lon = 10.7001245;
+        var range = 0.02;
+
+        L.polygon([
+            [lat + range, lon - range],
+            [lat + range, lon + range],
+            [lat - range, lon + range],
+            [lat - range, lon - range]
+        ], { fillOpacity: 0.2 }).addTo(map);
+
+        cacheOSMData(lat, lon, range, function() {
+            var start = nodeCache[1949570796]; // AM1
+            var goal = nodeCache[301451595]; // G64
+            UCS(start, goal);
+        });
     </script>
 
   </body>
