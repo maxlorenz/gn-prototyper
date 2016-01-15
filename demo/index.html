@@ -66,7 +66,11 @@
                         node = node.previous;
                     }
 
-                    L.polyline(latLng, { color: 'red' }).addTo(map);
+                    setTimeout(function() {
+                        L.polyline(latLng, { color: 'red' }).addTo(map);
+                    }, 10000 - maxSteps * 10);
+
+                    return;
                 }
 
                 explored[node.id] = true;
