@@ -12,15 +12,19 @@
   </head>
   <body unresolved>
 
+    <button id="demo" onclick="demo()" disabled>caching - please wait...</button>
     <div id="map" style="height: 640px"></div>
 
     <script src="../js/routing-api.js"></script>
     <script>
-        var map = L.map('map');
-        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        // AM1, Lübeck
+        var lat = 53.8338072;
+        var lon = 10.7001245;
+        var range = 0.02;
 
-        }).addTo(map);
+        var map = L.map('map');
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+        map.setView([lat, lon], 15);
 
         function findNodeWithShortestDistance(set) {
             var distance = Infinity;
@@ -37,7 +41,6 @@
         }
 
         function UCS(start, goal) {
-            map.setView([(start.lat + goal.lat)/2, (start.lon + goal.lon)/2], 15);
             L.marker([start.lat, start.lon]).addTo(map);
             L.marker([goal.lat, goal.lon]).addTo(map);
 
@@ -67,7 +70,6 @@
                 }
 
                 explored[node.id] = true;
-                L.circle([node.lat, node.lon], 2).addTo(map);
 
                 getNextNodes(node).forEach(function(n) {
                     previous = node;
@@ -84,29 +86,36 @@
                             frontier[n.id].distance = distance;
                         }
                     }
+
+                    var circle = [node.lat, node.lon];
+                    setTimeout(function() {
+                        L.circle(circle, 2).addTo(map);
+                    }, 10000 - maxSteps * 10, circle);
                 });
 
                 maxSteps--;
             }
         }
 
-        // AM1, Lübeck
-        var lat = 53.8338072;
-        var lon = 10.7001245;
-        var range = 0.02;
-
-        L.polygon([
-            [lat + range, lon - range],
-            [lat + range, lon + range],
-            [lat - range, lon + range],
-            [lat - range, lon - range]
-        ], { fillOpacity: 0.2 }).addTo(map);
-
         cacheOSMData(lat, lon, range, function() {
+            document.getElementById("demo").disabled = false;
+            document.getElementById("demo").innerHTML = "demo";
+
+
+            L.polygon([ // Show loaded range
+                [lat + range, lon - range],
+                [lat + range, lon + range],
+                [lat - range, lon + range],
+                [lat - range, lon - range]
+            ], { fillOpacity: 0.2 }).addTo(map);
+        });
+
+        function demo() {
             var start = nodeCache[1949570796]; // AM1
             var goal = nodeCache[301451595]; // G64
+
             UCS(start, goal);
-        });
+        }
     </script>
 
   </body>
