@@ -1,29 +1,27 @@
 {
   "name": "gn-prototyper",
-  "version": "1.0.6",
+  "homepage": "https://github.com/maxlorenz/gn-prototyper",
   "authors": [
-    "Anonymous <anonymous@example.com>"
+    "Max Lorenz <max-lorenz@gmx.net>"
   ],
-  "description": "An element providing a solution to no problem in particular.",
+  "description": "Prototyping library for routing applications",
+  "main": "routing-api.js",
+  "moduleType": [],
   "keywords": [
-    "web-component",
-    "polymer",
-    "seed"
+    "routing"
   ],
-  "main": "gn-prototyper.html",
-  "license": "http://polymer.github.io/LICENSE.txt",
-  "homepage": "https://github.com/<USERNAME>/seed-element/",
+  "license": "MIT",
+  "private": true,
   "ignore": [
-    "/.*",
-    "/test/"
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
   ],
   "dependencies": {
-    "polymer": "Polymer/polymer#^1.2.0",
-    "i18next": "~2.0.14",
-    "paper-elements": "latest",
-    "iron-elements": "latest"
   },
   "devDependencies": {
-    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0"
+    "leaflet": "~0.7.7"
   }
 }

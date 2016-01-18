@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>gn-prototyper Demo</title>
+
+    <link rel="stylesheet" href="bower_components/leaflet//css/leaflet.css" />
+    <script src="bower_components/leaflet//js/leaflet.js"></script>
+  </head>
+  <body>
+
+    <button id="demo" onclick="demo()" disabled>caching - please wait...</button>
+    <div id="map" style="height: 640px"></div>
+
+    <script src="routing-api.js"></script>
+    <script>
+        // AM1, Lübeck
+        var lat = 53.8338072;
+        var lon = 10.7001245;
+        var range = 0.02;
+
+        var map = L.map('map');
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+        map.setView([lat, lon], 15);
+
+        function findNodeWithShortestDistance(set) {
+            var distance = Infinity;
+            var shortestId = null;
+
+            for (var id in set) {
+                if (set[id].distance < distance) {
+                    distance = set[id].distance;
+                    shortestId = id;
+                }
+            }
+
+            return nodeCache[shortestId];
+        }
+
+        function UCS(start, goal) {
+            L.marker([start.lat, start.lon]).addTo(map);
+            L.marker([goal.lat, goal.lon]).addTo(map);
+
+            var node;
+            var frontier = {};
+            var explored = {};
+            var maxSteps = 1000;
+
+            node = start;
+            node.distance = 0;
+            frontier[node.id] = node;
+
+            while (Object.keys(frontier).length > 0 && maxSteps > 0) {
+
+                node = findNodeWithShortestDistance(frontier);
+                delete frontier[node.id];
+
+                if (node == goal) { // Draw found path
+                    var latLng = [];
+
+                    while (node.previous != undefined) {
+                        latLng.push([node.lat, node.lon]);
+                        node = node.previous;
+                    }
+
+                    setTimeout(function() {
+                        L.polyline(latLng, { color: 'red' }).addTo(map);
+                    }, 10000 - maxSteps * 10);
+
+                    return;
+                }
+
+                explored[node.id] = true;
+
+                getNextNodes(node).forEach(function(n) {
+                    previous = node;
+                    distance = distanceInM(node, n);
+
+                    if (!(n.id in explored)) {
+                        if (!(n.id in frontier)) {
+                            frontier[n.id] = n;
+                            frontier[n.id].previous = previous;
+                            frontier[n.id].distance = distance;
+                        }
+                        else if (frontier[n.id].distance > distance) {
+                            frontier[n.id].previous = previous;
+                            frontier[n.id].distance = distance;
+                        }
+                    }
+
+                    var circle = [node.lat, node.lon];
+                    setTimeout(function() {
+                        L.circle(circle, 2).addTo(map);
+                    }, 10000 - maxSteps * 10, circle);
+                });
+
+                maxSteps--;
+            }
+        }
+
+        cacheOSMData(lat, lon, range, function() {
+            document.getElementById("demo").disabled = false;
+            document.getElementById("demo").innerHTML = "demo";
+
+
+            L.polygon([ // Show loaded range
+                [lat + range, lon - range],
+                [lat + range, lon + range],
+                [lat - range, lon + range],
+                [lat - range, lon - range]
+            ], { fillOpacity: 0.2 }).addTo(map);
+        });
+
+        function demo() {
+            var start = nodeCache[1949570796]; // AM1
+            var goal = nodeCache[301451595]; // G64
+
+            UCS(start, goal);
+        }
+    </script>
+
+  </body>
+</html>
