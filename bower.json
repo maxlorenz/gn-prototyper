@@ -5,7 +5,10 @@
     "Max Lorenz <max-lorenz@gmx.net>"
   ],
   "description": "Prototyping library for routing applications",
-  "main": "routing-api.js",
+  "main": [
+    "routing-api.js",
+    "demo.html"
+  ],
   "moduleType": [],
   "keywords": [
     "routing"
