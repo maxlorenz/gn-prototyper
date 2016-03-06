@@ -5,4 +5,4 @@ See demo.html for a simple example.
 
 ## How to run
 
-Clone, open in the browser of your choice
+Clone, bower install, open in the browser of your choice
